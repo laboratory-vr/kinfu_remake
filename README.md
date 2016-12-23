@@ -21,3 +21,6 @@ Implicit dependency (needed by opencv_viz):
 Screenshot:
 * https://raw.githubusercontent.com/Nerei/kinfu_remake/master/perf-39.5fps-Tesla-C2070.png
 
+Aemass build command:
+* cmake -G Xcode -DCMAKE_PREFIX_PATH=/usr/local/Cellar/qt5/5.7.0/lib/cmake/ -DOpenCV_DIR=/usr/local/Cellar/opencv3/HEAD-ad74fdd_4/share/OpenCV/ ../
+
