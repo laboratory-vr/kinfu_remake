@@ -5,7 +5,7 @@ using namespace std;
 using namespace kfusion;
 using namespace kfusion::cuda;
 
-static inline float deg2rad (float alpha) { return alpha * 0.017453293f; }
+// static inline float deg2rad (float alpha) { return alpha * 0.017453293f; }
 
 kfusion::KinFuParams kfusion::KinFuParams::default_params()
 {

@@ -71,7 +71,6 @@ kfusion::cuda::ProjectiveICP::ProjectiveICP() : angle_thres_(deg2rad(20.f)), dis
     std::vector<int> vector_iters(iters, iters + 4);
     setIterationsNum(vector_iters);
     device::ComputeIcpHelper::allocate_buffer(buffer_);
-
     shelp_ = cv::Ptr<StreamHelper>(new StreamHelper());
 }
 
@@ -146,7 +145,7 @@ bool kfusion::cuda::ProjectiveICP::estimateTransform(Affine3f& affine, const Int
             helper(dprev[level_index], n, buffer_, sh, sh);
 
             StreamHelper::Vec6f b;
-            StreamHelper::Mat6f A  = sh.get(b);
+            StreamHelper::Mat6f A  = sh.get(b); //TODO: USE_DEPTH would fail here.
 
             //checking nullspace
             double det = cv::determinant(A);
