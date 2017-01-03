@@ -19,7 +19,9 @@ find_package(OpenCV 3.0.0 REQUIRED COMPONENTS core viz highgui)
 find_package(CUDA 5.0 REQUIRED)
 find_package(OpenNI REQUIRED)
 find_package(OpenNI2 REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${OPENNI_INCLUDE_DIR} ${OPENNI2_INCLUDE_DIR})
+find_package(Boost COMPONENTS system filesystem program_options thread REQUIRED)
+
+include_directories(${OpenCV_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${OPENNI_INCLUDE_DIR} ${OPENNI2_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 # ---[ misc settings
 if(USE_PROJECT_FOLDERS)

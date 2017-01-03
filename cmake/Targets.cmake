@@ -90,16 +90,19 @@ macro(add_module_library name)
   set(__has_cuda OFF)
   check_cuda(__has_cuda)  
   
-  set(__lib_type STATIC)
-  if (${ARGV1} MATCHES "SHARED|STATIC")
-    set(__lib_type ${ARGV1})
-  endif()
+  #set(__lib_type STATIC)
+  #if (${ARGV1} MATCHES "SHARED|STATIC")
+  #  set(__lib_type ${ARGV1})
+  #endif()
 
   if (__has_cuda)  
     cuda_add_library(${module_name} ${__lib_type} ${sources})
   else()
     add_library(${module_name} ${__lib_type} ${sources})
   endif()
+
+  # must link explicitly against boost.
+  # target_link_libraries(${_name} ${Boost_LIBRARIES})
    
   if(MSVC)
     set_target_properties(${module_name} PROPERTIES DEFINE_SYMBOL KFUSION_API_EXPORTS)
