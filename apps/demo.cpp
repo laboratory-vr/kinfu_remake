@@ -18,8 +18,6 @@
 #include "obj_writer.h"
 
 using namespace kfusion;
-namespace po        = boost::program_options;
-namespace po_style  = boost::program_options::command_line_style;
 
 struct KinFuApp
 {
@@ -54,9 +52,10 @@ struct KinFuApp
             output.fy = fy;
             output.cx = cx;
             output.cy = cy;
-            
-            //std::cout << "auto-intrinsic-values: fx: " << fx << " fy: " << fy << " cx: " << cx << " cy: " << cy << std::endl;
-            std::cout << "intrinsic loaded: : " << output << std::endl;
+
+            //std::cout << "intrinsic loaded: : " << output << std::endl;  // operator issue
+            std::cout << "intrinsic loaded: focal( " << fx << ", " << fy << " ) princple point( " << cx << ", " << cy  << ")"<< std::endl;
+
             bSet = true;
         }
         catch(boost::property_tree::xml_parser::xml_parser_error& e){
@@ -66,12 +65,12 @@ struct KinFuApp
     }
 
 
-    KinFuApp(OpenNI2Source& source) :  pause_(false), exit_ (false),
+    KinFuApp(OpenNI2Source& source, kfusion::Intr& intr) :  pause_(false), exit_ (false),
         iteractive_mode_(false), capture_ (source), compute_normals_(true)
     {
         KinFuParams params = KinFuParams::default_params();
         
-        params.intr         = kfusion::Intr(366.736, 366.736, 259.41, 204.374); //640f * 480f
+        params.intr         = intr;//kfusion::Intr(366.736, 366.736, 259.41, 204.374); //640f * 480f
         //Vec3f volume_size   = Vec3f::all(1.2f);
         float size_seed = .6f;
         int   dim_seed  = (1 << 8);
@@ -299,15 +298,41 @@ int main (int argc, char* argv[])
     OpenNI2Source capture;
     capture.open ("");
     
-    //capture.open("d:/onis/20111013-224932.oni");
-    //capture.open("d:/onis/reg20111229-180846.oni");
-    //capture.open("d:/onis/white1.oni");
-    //capture.open("/media/Main/onis/20111013-224932.oni");
-    //capture.open("20111013-225218.oni");
-    //capture.open("d:/onis/20111013-224551.oni");
-    //capture.open("d:/onis/20111013-224719.oni");
+    kfusion::Intr intrd(366.0, 366.0, 260.0, 204.0);
+    {
+        namespace po        = boost::program_options;
+        namespace po_style  = boost::program_options::command_line_style;
+        
+        //capture.open("d:/onis/20111013-224932.oni");
+        // Declare the supported options.
+        po::options_description desc("Allowed options");
+        desc.add_options()
+        ("help", "produce help message")
+        ("calibration", po::value<std::string>(), "set intrinsics file")
+        ;
+        
+        po::variables_map vm;
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+        
+        if (vm.count("help")) {
+            std::cout << desc << "\n";
+            return 1;
+        }
+        
+        if (vm.count("calibration") and is_file_exists( vm["calibration"].as<std::string>() ) ) {
+            std::string cal_file = vm["calibration"].as<std::string>();
+            
+            std::cout << "Depth intrinsics was in the file: "
+            << cal_file << ".\n";
+            KinFuApp::setIntrinsicsExternal( cal_file, intrd );
+            
+        } else {
+            std::cout << "Calibration file was not set.\n";
+        }
+    }
 
-    KinFuApp app (capture);
+    KinFuApp app (capture, intrd);
 
     // executing
     try { app.execute (); }
