@@ -24,3 +24,8 @@ Screenshot:
 Aemass build command:
 * cmake -G Xcode -DCMAKE_PREFIX_PATH=/usr/local/Cellar/qt5/5.7.0/lib/cmake/ -DOpenCV_DIR=/usr/local/Cellar/opencv3/HEAD-ad74fdd_4/share/OpenCV/ ../
 
+In ubuntu 14.04, due to the nvidia openCL poor compactibity, please compile a openCV with cuda but without openCL
+* -DWITH_OPENCL=OFF -DWITH_OPENCLAMDFFT=OFF  -DWITH_OPENCLAMDBLAS=OFF 
+Then compile kinfu_remake
+* cmake -DCMAKE_PREFIX_PATH=/path/to/OpenCV/ ../
+
