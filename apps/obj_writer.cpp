@@ -1,18 +1,24 @@
 #include <kfusion/types.hpp>
 
-#include <boost/filesystem.hpp> //-->background threading 
-
-//#include <kfusion/kinfu.hpp>
-//#include <opencv2/core/core.hpp>
+#include <boost/filesystem.hpp> //-->background threading
 
 #include "obj_writer.h"
-
-#include <iostream>
+#include <sys/stat.h>
+//#include <iostream>
 #include <string>
+
+using namespace kfusion;
 
 #define REPORT_ERROR(msg) kfusion::cuda::error ((msg), __FILE__, __LINE__)
 
-using namespace kfusion;
+bool is_path_exists(const std::string &strPath) {
+    return boost::filesystem::exists(boost::filesystem::path(strPath));
+}
+
+bool is_file_exists(const std::string& name) {
+    struct stat buffer;
+    return (stat (name.c_str(), &buffer) == 0);
+}
 
 std::string gen_next_filename(const std::string& filebase, const std::string& ext, const int& index)
 {
