@@ -130,8 +130,8 @@ struct KinFuApp
         Point*  cloud_cam_point = cloud_cam_pose.ptr<Point>();
         
         int idx = 0;
-        std::vector<cv::Affine3f>::const_iterator it = seqCameraEstimate_.cbegin();
-        for ( ; it != seqCameraEstimate_.cend(); ++it, ++idx )
+        std::vector<cv::Affine3f>::const_iterator it = seqCameraEstimate_.begin();
+        for ( ; it != seqCameraEstimate_.end(); ++it, ++idx )
         {
             Point* pi = &cloud_cam_point[idx];
             cv::Vec3f t = it->translation();
