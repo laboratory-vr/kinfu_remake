@@ -54,7 +54,7 @@ struct KinFuApp
             output.cy = cy;
 
             //std::cout << "intrinsic loaded: : " << output << std::endl;  // operator issue
-            std::cout << "intrinsic loaded: focal( " << fx << ", " << fy << " ) princple point( " << cx << ", " << cy  << ")"<< std::endl;
+            std::cout << "intrinsic loaded: focal( " << fx << ", " << fy << " ) princple point( " << cx << ", " << cy  << " )"<< std::endl;
 
             bSet = true;
         }
@@ -83,11 +83,14 @@ struct KinFuApp
         kinfu_ = KinFu::Ptr( new KinFu(params) );
 
         capture_.setRegistration(true);
-
+        capture_.setMirroring(false);
+        
         cv::viz::WCube cube(cv::Vec3d::all(0), cv::Vec3d(params.volume_size), true, cv::viz::Color::apricot());
         viz_.showWidget("cube", cube, params.volume_pose);
         viz_.showWidget("coor", cv::viz::WCoordinateSystem(0.1));
         viz_.registerKeyboardCallback(KeyboardCallback, this);
+        
+        cam_poses_.reserve(3000);
     }
 
     void show_depth(const cv::Mat& depth)
@@ -120,25 +123,32 @@ struct KinFuApp
     void take_cam_pose()
     {
         //std::vector<cv::Affine3f> until;
-        //const std::vector<cv::Affine3f>& from = seqCameraEstimate_;
+        //const std::vector<cv::Affine3f>& from = cam_poses_;
         //std::vector<cv::Affine3f>::const_iterator it = from.cbegin();
         //for ( ; it != from.cend(); ++it )
         //    until.push_back(*it);
         
-        cv::Mat cloud_cam_pose  = cv::Mat( 1, (int)seqCameraEstimate_.size(), CV_32FC4 );
+        cv::Mat cloud_cam_pose  = cv::Mat( 1, (int)cam_poses_.size(), CV_32FC4 );
         Point*  cloud_cam_point = cloud_cam_pose.ptr<Point>();
         
+        cv::Mat cloud_cam_norn  = cv::Mat( 1, (int)cam_poses_.size(), CV_32FC4 );
+        Normal* cloud_cam_normal= cloud_cam_norn.ptr<Normal>();
+        
         int idx = 0;
-        std::vector<cv::Affine3f>::const_iterator it = seqCameraEstimate_.begin();
-        for ( ; it != seqCameraEstimate_.end(); ++it, ++idx )
+        std::vector<cv::Affine3f>::const_iterator it = cam_poses_.begin();
+        for ( ; it != cam_poses_.end(); ++it, ++idx )
         {
             Point* pi = &cloud_cam_point[idx];
+            Point* ni = &cloud_cam_normal[idx];
             cv::Vec3f t = it->translation();
+            cv::Affine3f::Mat3 m = it->rotation();
+            cv::Matx31f mi = m.col(2);
             memcpy( pi, &t, sizeof(t));
+            memcpy( ni, &mi, sizeof(mi));
             //it->rotate()();
         }
         std::string filename    = fetch_filename("Affine","ply");
-        savePLYFile ( filename, cloud_cam_point, 0, cloud_cam_pose.total(), 6);
+        savePLYFile ( filename, cloud_cam_point, cloud_cam_normal, cloud_cam_pose.total(), 6);
     }
 
     void take_cloud(KinFu& kinfu)
@@ -215,13 +225,9 @@ struct KinFuApp
             if (frame_type < 0)
                 return std::cout << "Can't grab" << std::endl, false;
             
-            if ( true ) //Only accept depth image
-            {
-                if(!image.empty())
-                    show_color(image);
-                //continue; //std::cout << "skip color" << std::endl,
-            }
-            
+            if ( !image.empty() )
+                show_color(image);
+
             if (depth_device_.empty())
                 std::cout << "Depth image cols: " << depth.cols << " rows: "<< depth.rows << std::endl;
             depth_device_.upload(depth.data, depth.step, depth.rows, depth.cols);
@@ -234,13 +240,13 @@ struct KinFuApp
             if (has_image)
                 show_raycasted(kinfu);
             else
-                seqCameraEstimate_.clear(), seqCameraEstimate_.reserve(30000);
+                cam_poses_.clear(), cam_poses_.reserve(3000);
 
             show_depth(depth);
             //cv::imshow("Image", image);
             
             cv::Affine3f current_cam_pos = kinfu.getCameraPose();
-            seqCameraEstimate_.push_back(current_cam_pos);
+            cam_poses_.push_back(current_cam_pos);
             
             if (!iteractive_mode_)
                 viz_.setViewerPose(current_cam_pos);
@@ -252,6 +258,8 @@ struct KinFuApp
             //exit_ = exit_ || i > 100;
             viz_.spinOnce(3, true);
         }
+        
+        boost::lock_guard<boost::mutex> lock(cloud_mem_lock_); //Wait for saving file.
         return true;
     }
 
@@ -279,7 +287,7 @@ struct KinFuApp
     
     // Affine3f recorder
     
-    std::vector<cv::Affine3f> seqCameraEstimate_;
+    std::vector<cv::Affine3f> cam_poses_;
 };
 
 
