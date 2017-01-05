@@ -70,7 +70,7 @@ bool kfusion::OpenNI2Source::open (const string& device_uri)
             impl_->depth.destroy();
             
         }
-        else impl_->has_depth = true; impl_->depth.setMirroringEnabled(true);
+        else impl_->has_depth = true; //impl_->depth.setMirroringEnabled(true);
     }
     else
     {
@@ -90,7 +90,7 @@ bool kfusion::OpenNI2Source::open (const string& device_uri)
             impl_->color.destroy();
             
         }
-        else impl_->has_image = true; impl_->color.setMirroringEnabled(true);
+        else impl_->has_image = true; //impl_->color.setMirroringEnabled(true);
     }
     else
     {
@@ -160,6 +160,17 @@ bool kfusion::OpenNI2Source::open (const string& device_uri)
     return rc == openni::STATUS_OK;
 }
 
+bool kfusion::OpenNI2Source::setMirroring(bool value)
+{
+    bool ret = true;
+    if (impl_)
+    {
+        ret &= impl_->color.setMirroringEnabled(value);
+        ret &= impl_->depth.setMirroringEnabled(value);
+    }
+    return ret;
+}
+
 
 //bool kfusion::OpenNI2Source::open(const std::string& filename, bool repeat /*= false*/){}
 
@@ -212,7 +223,7 @@ void fillColor(const openni::VideoFrameRef& src,  cv::Mat& dst)
     /**/
 }
 
-size_t kfusion::OpenNI2Source::grab(cv::Mat& depth, cv::Mat& image)
+int kfusion::OpenNI2Source::grab(cv::Mat& depth, cv::Mat& image)
 {
     openni::Status rc = openni::STATUS_OK;
     
@@ -236,7 +247,7 @@ size_t kfusion::OpenNI2Source::grab(cv::Mat& depth, cv::Mat& image)
     {
         sprintf( impl_->strError, "openni2 interface: Read failed:\n%s\n", openni::OpenNI::getExtendedError() );
         REPORT_ERROR(impl_->strError);
-        return 0;
+        return -1;
     }
     /*
     impl_->depth.readFrame(&impl_->depthFrame); fillDepth(impl_->depthFrame, depth);

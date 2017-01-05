@@ -27,8 +27,10 @@ namespace kfusion
 
         ~OpenNI2Source();
 
-        size_t grab(cv::Mat &depth, cv::Mat &image);
-
+        int grab(cv::Mat &depth, cv::Mat &image);
+        
+        bool setMirroring(bool value);
+        
         //parameters taken from camera/oni
         int shadow_value, no_sample_value;
         //float depth_focal_length_VGA;
